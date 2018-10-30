@@ -27,7 +27,6 @@ class ConvexVolumeTool : public SampleTool
 {
 	Sample* m_sample;
 	int m_areaType;
-	float m_polyOffset;
 	float m_boxHeight;
 	float m_boxDescent;
 	
@@ -39,15 +38,14 @@ class ConvexVolumeTool : public SampleTool
 	
 public:
 	ConvexVolumeTool();
+	~ConvexVolumeTool();
 	
 	virtual int type() { return TOOL_CONVEX_VOLUME; }
 	virtual void init(Sample* sample);
 	virtual void reset();
 	virtual void handleMenu();
-	virtual void handleClick(const float* s, const float* p, bool shift);
-	virtual void handleToggle();
+	virtual void handleClick(const float* p, bool shift);
 	virtual void handleStep();
-	virtual void handleUpdate(const float dt);
 	virtual void handleRender();
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 };

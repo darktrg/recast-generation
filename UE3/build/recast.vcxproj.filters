@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\RecastNavMesh.cpp" />
+    <ClCompile Include="..\..\Recast\Source\Recast.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastArea.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastContour.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastFilter.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastLog.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastMesh.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastMeshDetail.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastRasterization.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastRegion.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Recast\Source\RecastTimer.cpp">
+      <Filter>Recast</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Detour\Source\DetourCommon.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Detour\Source\DetourNavMesh.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Detour\Source\DetourNavMeshBuilder.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Detour\Source\DetourNode.cpp">
+      <Filter>Detour</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\RecastNavMesh.h" />
+    <ClInclude Include="..\..\Recast\Include\Recast.h">
+      <Filter>Recast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Recast\Include\RecastLog.h">
+      <Filter>Recast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Recast\Include\RecastTimer.h">
+      <Filter>Recast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Detour\Include\DetourCommon.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Detour\Include\DetourNavMesh.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Detour\Include\DetourNavMeshBuilder.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Detour\Include\DetourNode.h">
+      <Filter>Detour</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Recast">
+      <UniqueIdentifier>{7caf41f9-e612-4031-bd83-396469ce9c00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour">
+      <UniqueIdentifier>{cb1aee22-c022-4bd4-8660-b4e29f4ed2cd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -24,9 +24,6 @@
 #include "Recast.h"
 #include "RecastDebugDraw.h"
 #include "DetourDebugDraw.h"
-#include "DetourNavMesh.h"
-#include "DetourNavMeshQuery.h"
-#include "DetourCrowd.h"
 #include "imgui.h"
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -35,31 +32,66 @@
 #	define snprintf _snprintf
 #endif
 
+
+void DebugDrawGL::depthMask(bool state)
+{
+	glDepthMask(state ? GL_TRUE : GL_FALSE);
+}
+
+void DebugDrawGL::begin(duDebugDrawPrimitives prim, float size)
+{
+	switch (prim)
+	{
+		case DU_DRAW_POINTS:
+			glPointSize(size);
+			glBegin(GL_POINTS);
+			break;
+		case DU_DRAW_LINES:
+			glLineWidth(size);
+			glBegin(GL_LINES);
+			break;
+		case DU_DRAW_TRIS:
+			glBegin(GL_TRIANGLES);
+			break;
+		case DU_DRAW_QUADS:
+			glBegin(GL_QUADS);
+			break;
+	};
+}
+	
+void DebugDrawGL::vertex(const float* pos, unsigned int color)
+{
+	glColor4ubv((GLubyte*)&color);
+	glVertex3fv(pos);
+}
+	
+void DebugDrawGL::vertex(const float x, const float y, const float z, unsigned int color)
+{
+	glColor4ubv((GLubyte*)&color);
+	glVertex3f(x,y,z);
+}
+	
+void DebugDrawGL::end()
+{
+	glEnd();
+	glLineWidth(1.0f);
+	glPointSize(1.0f);
+}
+
+
 Sample::Sample() :
 	m_geom(0),
 	m_navMesh(0),
-	m_navQuery(0),
-	m_crowd(0),
-	m_navMeshDrawFlags(DU_DRAWNAVMESH_OFFMESHCONS|DU_DRAWNAVMESH_CLOSEDLIST),
-	m_tool(0),
-	m_ctx(0)
+	m_navMeshDrawFlags(DU_DRAWNAVMESH_CLOSEDLIST|DU_DRAWNAVMESH_OFFMESHCONS),
+	m_tool(0)
 {
 	resetCommonSettings();
-	m_navQuery = dtAllocNavMeshQuery();
-	m_crowd = dtAllocCrowd();
-
-	for (int i = 0; i < MAX_TOOLS; i++)
-		m_toolStates[i] = 0;
 }
 
 Sample::~Sample()
 {
-	dtFreeNavMeshQuery(m_navQuery);
-	dtFreeNavMesh(m_navMesh);
-	dtFreeCrowd(m_crowd);
+	delete m_navMesh;
 	delete m_tool;
-	for (int i = 0; i < MAX_TOOLS; i++)
-		delete m_toolStates[i];
 }
 
 void Sample::setTool(SampleTool* tool)
@@ -91,7 +123,7 @@ void Sample::handleRender()
 		
 	// Draw mesh
 	duDebugDrawTriMesh(&dd, m_geom->getMesh()->getVerts(), m_geom->getMesh()->getVertCount(),
-					   m_geom->getMesh()->getTris(), m_geom->getMesh()->getNormals(), m_geom->getMesh()->getTriCount(), 0, 1.0f);
+					   m_geom->getMesh()->getTris(), m_geom->getMesh()->getNormals(), m_geom->getMesh()->getTriCount(), 0);
 	// Draw bounds
 	const float* bmin = m_geom->getMeshBoundsMin();
 	const float* bmax = m_geom->getMeshBoundsMax();
@@ -105,45 +137,19 @@ void Sample::handleRenderOverlay(double* /*proj*/, double* /*model*/, int* /*vie
 void Sample::handleMeshChanged(InputGeom* geom)
 {
 	m_geom = geom;
-
-	const BuildSettings* buildSettings = geom->getBuildSettings();
-	if (buildSettings)
-	{
-		m_cellSize = buildSettings->cellSize;
-		m_cellHeight = buildSettings->cellHeight;
-		m_agentHeight = buildSettings->agentHeight;
-		m_agentRadius = buildSettings->agentRadius;
-		m_agentMaxClimb = buildSettings->agentMaxClimb;
-		m_agentMaxSlope = buildSettings->agentMaxSlope;
-		m_regionMinSize = buildSettings->regionMinSize;
-		m_regionMergeSize = buildSettings->regionMergeSize;
-		m_edgeMaxLen = buildSettings->edgeMaxLen;
-		m_edgeMaxError = buildSettings->edgeMaxError;
-		m_vertsPerPoly = buildSettings->vertsPerPoly;
-		m_detailSampleDist = buildSettings->detailSampleDist;
-		m_detailSampleMaxError = buildSettings->detailSampleMaxError;
-		m_partitionType = buildSettings->partitionType;
-	}
 }
 
-void Sample::collectSettings(BuildSettings& settings)
+const float* Sample::getBoundsMin()
 {
-	settings.cellSize = m_cellSize;
-	settings.cellHeight = m_cellHeight;
-	settings.agentHeight = m_agentHeight;
-	settings.agentRadius = m_agentRadius;
-	settings.agentMaxClimb = m_agentMaxClimb;
-	settings.agentMaxSlope = m_agentMaxSlope;
-	settings.regionMinSize = m_regionMinSize;
-	settings.regionMergeSize = m_regionMergeSize;
-	settings.edgeMaxLen = m_edgeMaxLen;
-	settings.edgeMaxError = m_edgeMaxError;
-	settings.vertsPerPoly = m_vertsPerPoly;
-	settings.detailSampleDist = m_detailSampleDist;
-	settings.detailSampleMaxError = m_detailSampleMaxError;
-	settings.partitionType = m_partitionType;
+	if (!m_geom) return 0;
+	return m_geom->getMeshBoundsMin();
 }
 
+const float* Sample::getBoundsMax()
+{
+	if (!m_geom) return 0;
+	return m_geom->getMeshBoundsMax();
+}
 
 void Sample::resetCommonSettings()
 {
@@ -153,14 +159,13 @@ void Sample::resetCommonSettings()
 	m_agentRadius = 0.6f;
 	m_agentMaxClimb = 0.9f;
 	m_agentMaxSlope = 45.0f;
-	m_regionMinSize = 8;
+	m_regionMinSize = 50;
 	m_regionMergeSize = 20;
 	m_edgeMaxLen = 12.0f;
 	m_edgeMaxError = 1.3f;
 	m_vertsPerPoly = 6.0f;
 	m_detailSampleDist = 6.0f;
 	m_detailSampleMaxError = 1.0f;
-	m_partitionType = SAMPLE_PARTITION_WATERSHED;
 }
 
 void Sample::handleCommonSettings()
@@ -171,8 +176,8 @@ void Sample::handleCommonSettings()
 	
 	if (m_geom)
 	{
-		const float* bmin = m_geom->getNavMeshBoundsMin();
-		const float* bmax = m_geom->getNavMeshBoundsMax();
+		const float* bmin = m_geom->getMeshBoundsMin();
+		const float* bmax = m_geom->getMeshBoundsMax();
 		int gw = 0, gh = 0;
 		rcCalcGridSize(bmin, bmax, m_cellSize, &gw, &gh);
 		char text[64];
@@ -191,15 +196,6 @@ void Sample::handleCommonSettings()
 	imguiLabel("Region");
 	imguiSlider("Min Region Size", &m_regionMinSize, 0.0f, 150.0f, 1.0f);
 	imguiSlider("Merged Region Size", &m_regionMergeSize, 0.0f, 150.0f, 1.0f);
-
-	imguiSeparator();
-	imguiLabel("Partitioning");
-	if (imguiCheck("Watershed", m_partitionType == SAMPLE_PARTITION_WATERSHED))
-		m_partitionType = SAMPLE_PARTITION_WATERSHED;
-	if (imguiCheck("Monotone", m_partitionType == SAMPLE_PARTITION_MONOTONE))
-		m_partitionType = SAMPLE_PARTITION_MONOTONE;
-	if (imguiCheck("Layers", m_partitionType == SAMPLE_PARTITION_LAYERS))
-		m_partitionType = SAMPLE_PARTITION_LAYERS;
 	
 	imguiSeparator();
 	imguiLabel("Polygonization");
@@ -215,16 +211,10 @@ void Sample::handleCommonSettings()
 	imguiSeparator();
 }
 
-void Sample::handleClick(const float* s, const float* p, bool shift)
+void Sample::handleClick(const float* p, bool shift)
 {
 	if (m_tool)
-		m_tool->handleClick(s, p, shift);
-}
-
-void Sample::handleToggle()
-{
-	if (m_tool)
-		m_tool->handleToggle();
+		m_tool->handleClick(p, shift);
 }
 
 void Sample::handleStep()
@@ -237,57 +227,3 @@ bool Sample::handleBuild()
 {
 	return true;
 }
-
-void Sample::handleUpdate(const float dt)
-{
-	if (m_tool)
-		m_tool->handleUpdate(dt);
-	updateToolStates(dt);
-}
-
-
-void Sample::updateToolStates(const float dt)
-{
-	for (int i = 0; i < MAX_TOOLS; i++)
-	{
-		if (m_toolStates[i])
-			m_toolStates[i]->handleUpdate(dt);
-	}
-}
-
-void Sample::initToolStates(Sample* sample)
-{
-	for (int i = 0; i < MAX_TOOLS; i++)
-	{
-		if (m_toolStates[i])
-			m_toolStates[i]->init(sample);
-	}
-}
-
-void Sample::resetToolStates()
-{
-	for (int i = 0; i < MAX_TOOLS; i++)
-	{
-		if (m_toolStates[i])
-			m_toolStates[i]->reset();
-	}
-}
-
-void Sample::renderToolStates()
-{
-	for (int i = 0; i < MAX_TOOLS; i++)
-	{
-		if (m_toolStates[i])
-			m_toolStates[i]->handleRender();
-	}
-}
-
-void Sample::renderOverlayToolStates(double* proj, double* model, int* view)
-{
-	for (int i = 0; i < MAX_TOOLS; i++)
-	{
-		if (m_toolStates[i])
-			m_toolStates[i]->handleRenderOverlay(proj, model, view);
-	}
-}
-

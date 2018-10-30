@@ -23,11 +23,6 @@
 #include <float.h>
 #include "SDL.h"
 #include "SDL_opengl.h"
-#ifdef __APPLE__
-#	include <OpenGL/glu.h>
-#else
-#	include <GL/glu.h>
-#endif
 #include "imgui.h"
 #include "OffMeshConnectionTool.h"
 #include "InputGeom.h"
@@ -58,9 +53,9 @@ OffMeshConnectionTool::~OffMeshConnectionTool()
 
 void OffMeshConnectionTool::init(Sample* sample)
 {
-	if (m_sample != sample)
+	m_sample = sample;
+	if (m_sample)
 	{
-		m_sample = sample;
 		m_oldFlags = m_sample->getNavMeshDrawFlags();
 		m_sample->setNavMeshDrawFlags(m_oldFlags & ~DU_DRAWNAVMESH_OFFMESHCONS);
 	}
@@ -77,9 +72,18 @@ void OffMeshConnectionTool::handleMenu()
 		m_bidir = false;
 	if (imguiCheck("Bidirectional", m_bidir))
 		m_bidir = true;
+
+	if (!m_hitPosSet)
+	{
+		imguiValue("Click to set connection start.");
+	}
+	else
+	{
+		imguiValue("Click to set connection end.");
+	}
 }
 
-void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool shift)
+void OffMeshConnectionTool::handleClick(const float* p, bool shift)
 {
 	if (!m_sample) return;
 	InputGeom* geom = m_sample->getInputGeom();
@@ -128,15 +132,7 @@ void OffMeshConnectionTool::handleClick(const float* /*s*/, const float* p, bool
 	
 }
 
-void OffMeshConnectionTool::handleToggle()
-{
-}
-
 void OffMeshConnectionTool::handleStep()
-{
-}
-
-void OffMeshConnectionTool::handleUpdate(const float /*dt*/)
 {
 }
 
@@ -162,16 +158,5 @@ void OffMeshConnectionTool::handleRenderOverlay(double* proj, double* model, int
 								model, proj, view, &x, &y, &z))
 	{
 		imguiDrawText((int)x, (int)(y-25), IMGUI_ALIGN_CENTER, "Start", imguiRGBA(0,0,0,220));
-	}
-	
-	// Tool help
-	const int h = view[3];
-	if (!m_hitPosSet)
-	{
-		imguiDrawText(280, h-40, IMGUI_ALIGN_LEFT, "LMB: Create new connection.  SHIFT+LMB: Delete existing connection, click close to start or end point.", imguiRGBA(255,255,255,192));	
-	}
-	else
-	{
-		imguiDrawText(280, h-40, IMGUI_ALIGN_LEFT, "LMB: Set connection end point and finish.", imguiRGBA(255,255,255,192));	
 	}
 }

@@ -17,61 +17,84 @@
 //
 
 #include "Filelist.h"
-
-#include <algorithm>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef WIN32
 #	include <io.h>
 #else
 #	include <dirent.h>
-#	include <cstring>
 #endif
 
-using std::vector;
-using std::string;
-
-void scanDirectoryAppend(const string& path, const string& ext, vector<string>& filelist)
+static void fileListAdd(FileList& list, const char* path)
 {
-#ifdef WIN32
-	string pathWithExt = path + "/*" + ext;
-	
-	_finddata_t dir;
-	long fh = _findfirst(pathWithExt.c_str(), &dir);
-	if (fh == -1L)
-	{
+	if (list.size >= FileList::MAX_FILES)
 		return;
-	}
+	int n = strlen(path);
+	list.files[list.size] = new char[n+1];
+	strcpy(list.files[list.size], path);
+	list.size++;
+}
+
+static void fileListClear(FileList& list)
+{
+	for (int i = 0; i < list.size; ++i)
+		delete [] list.files[i];
+	list.size = 0;
+}
+
+FileList::FileList() : size(0)
+{
+	memset(files, 0, sizeof(char*)*MAX_FILES);
+}
+
+FileList::~FileList()
+{
+	fileListClear(*this);
+}
+
+static int cmp(const void* a, const void* b)
+{
+	return strcmp(*(const char**)a, *(const char**)b);
+}
 	
+void scanDirectory(const char* path, const char* ext, FileList& list)
+{
+	fileListClear(list);
+	
+#ifdef WIN32
+	_finddata_t dir;
+	char pathWithExt[260];
+	long fh;
+	strcpy(pathWithExt, path);
+	strcat(pathWithExt, "/*");
+	strcat(pathWithExt, ext);
+	fh = _findfirst(pathWithExt, &dir);
+	if (fh == -1L)
+		return;
 	do
 	{
-		filelist.push_back(dir.name);
+		fileListAdd(list, dir.name);
 	}
 	while (_findnext(fh, &dir) == 0);
 	_findclose(fh);
 #else
 	dirent* current = 0;
-	DIR* dp = opendir(path.c_str());
+	DIR* dp = opendir(path);
 	if (!dp)
-	{
 		return;
-	}
 	
 	while ((current = readdir(dp)) != 0)
 	{
 		int len = strlen(current->d_name);
-		if (len > 4 && strncmp(current->d_name + len - 4, ext.c_str(), 4) == 0)
+		if (len > 4 && strncmp(current->d_name+len-4, ext, 4) == 0)
 		{
-			filelist.push_back(current->d_name);
+			fileListAdd(list, current->d_name);
 		}
 	}
 	closedir(dp);
 #endif
-	
-	// Sort the list of files alphabetically.
-	std::sort(filelist.begin(), filelist.end());
-}
 
-void scanDirectory(const string& path, const string& ext, vector<string>& filelist)
-{
-	filelist.clear();
-	scanDirectoryAppend(path, ext, filelist);
+	if (list.size > 1)
+		qsort(list.files, list.size, sizeof(char*), cmp);
 }
