@@ -101,11 +101,14 @@ static int pointInPoly(int nvert, const float* verts, const float* p)
 ConvexVolumeTool::ConvexVolumeTool() :
 	m_sample(0),
 	m_areaType(SAMPLE_POLYAREA_GRASS),
-	m_polyOffset(0.0f),
 	m_boxHeight(6.0f),
 	m_boxDescent(1.0f),
 	m_npts(0),
 	m_nhull(0)
+{
+}
+
+ConvexVolumeTool::~ConvexVolumeTool()
 {
 }
 
@@ -124,7 +127,6 @@ void ConvexVolumeTool::handleMenu()
 {
 	imguiSlider("Shape Height", &m_boxHeight, 0.1f, 20.0f, 0.1f);
 	imguiSlider("Shape Descent", &m_boxDescent, 0.1f, 20.0f, 0.1f);
-	imguiSlider("Poly Offset", &m_polyOffset, 0.0f, 10.0f, 0.1f);
 
 	imguiSeparator();
 
@@ -147,9 +149,19 @@ void ConvexVolumeTool::handleMenu()
 		m_npts = 0;
 		m_nhull = 0;
 	}
+
+	imguiSeparator();
+	
+	imguiValue("Click to create points.");
+	imguiValue("The shape is convex hull");
+	imguiValue("of all the create points.");
+	imguiValue("Click on highlited point");
+	imguiValue("to finish the shape.");
+
+	imguiSeparator();
 }
 
-void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shift)
+void ConvexVolumeTool::handleClick(const float* p, bool shift)
 {
 	if (!m_sample) return;
 	InputGeom* geom = m_sample->getInputGeom();
@@ -163,7 +175,7 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 		for (int i = 0; i < geom->getConvexVolumeCount(); ++i)
 		{
 			if (pointInPoly(vols[i].nverts, vols[i].verts, p) &&
-							p[1] >= vols[i].hmin && p[1] <= vols[i].hmax)
+							p[1] >= vols[i].hmin, p[1] <= vols[i].hmax)
 			{
 				nearestIndex = i;
 			}
@@ -193,18 +205,8 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 					minh = rcMin(minh, verts[i*3+1]);
 				minh -= m_boxDescent;
 				maxh = minh + m_boxHeight;
-
-				if (m_polyOffset > 0.01f)
-				{
-					float offset[MAX_PTS*2*3];
-					int noffset = rcOffsetPoly(verts, m_nhull, m_polyOffset, offset, MAX_PTS*2);
-					if (noffset > 0)
-						geom->addConvexVolume(offset, noffset, minh, maxh, (unsigned char)m_areaType);
-				}
-				else
-				{
-					geom->addConvexVolume(verts, m_nhull, minh, maxh, (unsigned char)m_areaType);
-				}
+				
+				geom->addConvexVolume(verts, m_nhull, minh, maxh, (unsigned char)m_areaType);
 			}
 			
 			m_npts = 0;
@@ -228,15 +230,7 @@ void ConvexVolumeTool::handleClick(const float* /*s*/, const float* p, bool shif
 	
 }
 
-void ConvexVolumeTool::handleToggle()
-{
-}
-
 void ConvexVolumeTool::handleStep()
-{
-}
-
-void ConvexVolumeTool::handleUpdate(const float /*dt*/)
 {
 }
 
@@ -276,18 +270,6 @@ void ConvexVolumeTool::handleRender()
 	dd.end();	
 }
 
-void ConvexVolumeTool::handleRenderOverlay(double* /*proj*/, double* /*model*/, int* view)
+void ConvexVolumeTool::handleRenderOverlay(double* /*proj*/, double* /*model*/, int* /*view*/)
 {
-	// Tool help
-	const int h = view[3];
-	if (!m_npts)
-	{
-		imguiDrawText(280, h-40, IMGUI_ALIGN_LEFT, "LMB: Create new shape.  SHIFT+LMB: Delete existing shape (click inside a shape).", imguiRGBA(255,255,255,192));	
-	}
-	else
-	{
-		imguiDrawText(280, h-40, IMGUI_ALIGN_LEFT, "Click LMB to add new points. Click on the red point to finish the shape.", imguiRGBA(255,255,255,192));	
-		imguiDrawText(280, h-60, IMGUI_ALIGN_LEFT, "The shape will be convex hull of all added points.", imguiRGBA(255,255,255,192));	
-	}
-	
 }

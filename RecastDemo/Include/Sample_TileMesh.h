@@ -22,6 +22,7 @@
 #include "Sample.h"
 #include "DetourNavMesh.h"
 #include "Recast.h"
+#include "RecastLog.h"
 #include "ChunkyTriMesh.h"
 
 class Sample_TileMesh : public Sample
@@ -29,9 +30,10 @@ class Sample_TileMesh : public Sample
 protected:
 	bool m_keepInterResults;
 	bool m_buildAll;
+	rcBuildTimes m_buildTimes; 
 	float m_totalBuildTimeMs;
-
-	unsigned char* m_triareas;
+	
+	unsigned char* m_triflags;
 	rcHeightfield* m_solid;
 	rcCompactHeightfield* m_chf;
 	rcContourSet* m_cset;
@@ -39,38 +41,13 @@ protected:
 	rcPolyMeshDetail* m_dmesh;
 	rcConfig m_cfg;	
 	
-	enum DrawMode
-	{
-		DRAWMODE_NAVMESH,
-		DRAWMODE_NAVMESH_TRANS,
-		DRAWMODE_NAVMESH_BVTREE,
-		DRAWMODE_NAVMESH_NODES,
-		DRAWMODE_NAVMESH_PORTALS,
-		DRAWMODE_NAVMESH_INVIS,
-		DRAWMODE_MESH,
-		DRAWMODE_VOXELS,
-		DRAWMODE_VOXELS_WALKABLE,
-		DRAWMODE_COMPACT,
-		DRAWMODE_COMPACT_DISTANCE,
-		DRAWMODE_COMPACT_REGIONS,
-		DRAWMODE_REGION_CONNECTIONS,
-		DRAWMODE_RAW_CONTOURS,
-		DRAWMODE_BOTH_CONTOURS,
-		DRAWMODE_CONTOURS,
-		DRAWMODE_POLYMESH,
-		DRAWMODE_POLYMESH_DETAIL,		
-		MAX_DRAWMODE
-	};
-		
-	DrawMode m_drawMode;
-	
 	int m_maxTiles;
 	int m_maxPolysPerTile;
 	float m_tileSize;
 	
 	unsigned int m_tileCol;
-	float m_lastBuiltTileBmin[3];
-	float m_lastBuiltTileBmax[3];
+	float m_tileBmin[3];
+	float m_tileBmax[3];
 	float m_tileBuildTime;
 	float m_tileMemUsage;
 	int m_tileTriCount;
@@ -93,19 +70,11 @@ public:
 	virtual void handleRenderOverlay(double* proj, double* model, int* view);
 	virtual void handleMeshChanged(class InputGeom* geom);
 	virtual bool handleBuild();
-	virtual void collectSettings(struct BuildSettings& settings);
-	
-	void getTilePos(const float* pos, int& tx, int& ty);
 	
 	void buildTile(const float* pos);
 	void removeTile(const float* pos);
 	void buildAllTiles();
 	void removeAllTiles();
-
-private:
-	// Explicitly disabled copy constructor and copy assignment operator.
-	Sample_TileMesh(const Sample_TileMesh&);
-	Sample_TileMesh& operator=(const Sample_TileMesh&);
 };
 
 

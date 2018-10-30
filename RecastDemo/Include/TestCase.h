@@ -19,15 +19,14 @@
 #ifndef TESTCASE_H
 #define TESTCASE_H
 
-#include <string>
 #include "DetourNavMesh.h"
+#include "RecastTimer.h"
 
 class TestCase
 {
 	enum TestType
 	{
 		TEST_PATHFIND,
-		TEST_RAYCAST,
 	};
 	
 	struct Test
@@ -40,13 +39,9 @@ class TestCase
 		}
 		
 		TestType type;
-		float spos[3];
-		float epos[3];
-		float nspos[3];
-		float nepos[3];
+		float spos[3], epos[3];
 		float radius;
-		unsigned short includeFlags;
-		unsigned short excludeFlags;
+		int includeFlags, excludeFlags;
 		bool expand;
 		
 		float* straight;
@@ -54,19 +49,15 @@ class TestCase
 		dtPolyRef* polys;
 		int npolys;
 		
-		int findNearestPolyTime;
-		int findPathTime;
-		int findStraightPathTime;
+		rcTimeVal findNearestPolyTime;
+		rcTimeVal findPathTime;
+		rcTimeVal findStraightPathTime;
 		
 		Test* next;
-	private:
-		// Explicitly disabled copy constructor and copy assignment operator.
-		Test(const Test&);
-		Test& operator=(const Test&);
 	};
 
-	std::string m_sampleName;
-	std::string m_geomFileName;
+	char m_sampleName[256];
+	char m_geomFileName[256];
 	Test* m_tests;
 	
 	void resetTimes();
@@ -75,20 +66,15 @@ public:
 	TestCase();
 	~TestCase();
 
-	bool load(const std::string& filePath);
+	bool load(const char* filePath);
 	
-	const std::string& getSampleName() const { return m_sampleName; }
-	const std::string& getGeomFileName() const { return m_geomFileName; }
+	inline const char* getSampleName() const { return m_sampleName; }
+	inline const char* getGeomFileName() const { return m_geomFileName; }
 	
-	void doTests(class dtNavMesh* navmesh, class dtNavMeshQuery* navquery);
+	void doTests(class dtNavMesh* navmesh);
 	
 	void handleRender();
 	bool handleRenderOverlay(double* proj, double* model, int* view);
-
-private:
-	// Explicitly disabled copy constructor and copy assignment operator.
-	TestCase(const TestCase&);
-	TestCase& operator=(const TestCase&);
 };
 
 #endif // TESTCASE_H

@@ -17,10 +17,9 @@
 //
 
 #include "SlideShow.h"
-
 #include <string.h>
 #include <stdio.h>
-#include "SDL_opengl.h"
+#include <SDL_Opengl.h>
 //#define STBI_HEADER_FILE_ONLY
 #include "stb_image.h"
 
@@ -99,13 +98,13 @@ void SlideShow::prevSlide()
 
 void SlideShow::setSlide(int n)
 {
-	const int maxIdx = m_files.size() ? m_files.size() - 1 : 0;
+	const int maxIdx = m_files.size ? m_files.size-1 : 0;
 	m_nextSlide = n;
 	if (m_nextSlide < 0) m_nextSlide = 0;
 	if (m_nextSlide > maxIdx) m_nextSlide = maxIdx; 
 }
 
-void SlideShow::updateAndDraw(float dt, const float w, const float h)
+void SlideShow::updateAndDraw(float dt, const float /*w*/, const float /*h*/)
 {
 	float slideAlphaTarget = (m_showCurSlide && m_texId) ? 1.0f : 0.0f;
 	if (m_curSlide != m_nextSlide)
@@ -121,11 +120,11 @@ void SlideShow::updateAndDraw(float dt, const float w, const float h)
 	if (m_curSlide != m_nextSlide && m_slideAlpha < 0.01f)
 	{
 		m_curSlide = m_nextSlide;
-		if (m_curSlide >= 0 && static_cast<std::size_t>(m_curSlide) < m_files.size())
+		if (m_curSlide >= 0 && m_curSlide < m_files.size)
 		{
 			char path[256];
 			strcpy(path, m_path);
-			strcat(path, m_files[m_curSlide].c_str());
+			strcat(path, m_files.files[m_curSlide]);
 			loadImage(path);
 		}
 	}
@@ -139,8 +138,8 @@ void SlideShow::updateAndDraw(float dt, const float w, const float h)
 		
 		const float tw = (float)m_width;
 		const float th = (float)m_height;
-		const float hw = w*0.5f;
-		const float hh = h*0.5f;
+		const float hw = tw/2; //w*0.5f;
+		const float hh = th/2; //h*0.5f;
 		
 		glColor4ub(255,255,255,alpha);
 		glBegin(GL_QUADS);

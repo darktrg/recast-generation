@@ -19,12 +19,11 @@
 #include "MeshLoaderObj.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
+#include <string.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 
 rcMeshLoaderObj::rcMeshLoaderObj() :
-	m_scale(1.0f),
 	m_verts(0),
 	m_tris(0),
 	m_normals(0),
@@ -52,9 +51,9 @@ void rcMeshLoaderObj::addVertex(float x, float y, float z, int& cap)
 		m_verts = nv;
 	}
 	float* dst = &m_verts[m_vertCount*3];
-	*dst++ = x*m_scale;
-	*dst++ = y*m_scale;
-	*dst++ = z*m_scale;
+	*dst++ = x;
+	*dst++ = y;
+	*dst++ = z;
 	m_vertCount++;
 }
 
@@ -78,6 +77,7 @@ void rcMeshLoaderObj::addTriangle(int a, int b, int c, int& cap)
 
 static char* parseRow(char* buf, char* bufEnd, char* row, int len)
 {
+	bool cont = false;
 	bool start = true;
 	bool done = false;
 	int n = 0;
@@ -89,6 +89,7 @@ static char* parseRow(char* buf, char* bufEnd, char* row, int len)
 		switch (c)
 		{
 			case '\\':
+				cont = true; // multirow
 				break;
 			case '\n':
 				if (start) break;
@@ -101,6 +102,7 @@ static char* parseRow(char* buf, char* bufEnd, char* row, int len)
 				if (start) break;
 			default:
 				start = false;
+				cont = false;
 				row[n++] = c;
 				if (n >= len-1)
 					done = true;
@@ -135,10 +137,10 @@ static int parseFace(char* row, int* data, int n, int vcnt)
 	return j;
 }
 
-bool rcMeshLoaderObj::load(const std::string& filename)
+bool rcMeshLoaderObj::load(const char* filename)
 {
 	char* buf = 0;
-	FILE* fp = fopen(filename.c_str(), "rb");
+	FILE* fp = fopen(filename, "rb");
 	if (!fp)
 		return false;
 	fseek(fp, 0, SEEK_END);
@@ -150,14 +152,8 @@ bool rcMeshLoaderObj::load(const std::string& filename)
 		fclose(fp);
 		return false;
 	}
-	size_t readLen = fread(buf, bufSize, 1, fp);
+	fread(buf, bufSize, 1, fp);
 	fclose(fp);
-
-	if (readLen != 1)
-	{
-		delete[] buf;
-		return false;
-	}
 
 	char* src = buf;
 	char* srcEnd = buf + bufSize;
@@ -226,6 +222,8 @@ bool rcMeshLoaderObj::load(const std::string& filename)
 		}
 	}
 	
-	m_filename = filename;
+	strncpy(m_filename, filename, sizeof(m_filename));
+	m_filename[sizeof(m_filename)-1] = '\0';
+	
 	return true;
 }
